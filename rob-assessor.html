@@ -221,6 +221,20 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
 .j-opt.sel-critical { border-color: #8b0000; background: rgba(139,0,0,0.1); color: #8b0000; }
 .j-opt.sel-ni { border-color: var(--gray); background: var(--gray-bg); color: var(--gray); }
 
+.suggestion-badge {
+  display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.65rem;
+  border-radius: 12px; font-size: 0.75rem; font-weight: 500;
+  border: 1px dashed var(--border-color); color: var(--text-secondary);
+  background: var(--bg-secondary); opacity: 0.85;
+}
+.suggestion-badge .suggestion-level { font-weight: 700; }
+.suggestion-badge.suggest-low .suggestion-level { color: var(--green); }
+.suggestion-badge.suggest-some .suggestion-level,
+.suggestion-badge.suggest-moderate .suggestion-level { color: var(--amber); }
+.suggestion-badge.suggest-high .suggestion-level,
+.suggestion-badge.suggest-serious .suggestion-level { color: var(--red); }
+.suggestion-badge.suggest-critical .suggestion-level { color: #8b0000; }
+
 .rationale-area { margin-top: 0.75rem; }
 .rationale-area textarea { min-height: 50px; }
 
@@ -606,6 +620,148 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
     }
   }
 
+  // ===== ALGORITHM-GUIDED JUDGMENT SUGGESTION =====
+  // Based on RoB 2 guidance (Sterne 2019) and conservative ROBINS-I heuristic.
+  // Returns { key: 'low'|'some'|'high'|..., label: 'Low'|... } or null if insufficient answers.
+
+  function suggestJudgment(domainId, questions, framework) {
+    // Helper: check if an answer is in a set of values
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+    function isNI(ans)  { return ans === 'No information'; }
+
+    // Check if all questions have been answered
+    var qids = Object.keys(questions);
+    var answered = 0;
+    for (var i = 0; i < qids.length; i++) {
+      if (questions[qids[i]] != null) answered++;
+    }
+    if (answered === 0) return null; // No answers yet, no suggestion
+
+    if (framework === 'rob2') {
+      return suggestRoB2(domainId, questions);
+    } else if (framework === 'robins-i') {
+      return suggestROBINSI(questions);
+    }
+    return null;
+  }
+
+  function suggestRoB2(domainId, q) {
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+    function isNI(ans)  { return ans === 'No information'; }
+
+    if (domainId === 'D1') {
+      // Domain 1: Randomization process (questions 1.1, 1.2, 1.3)
+      var q11 = q['1.1'], q12 = q['1.2'], q13 = q['1.3'];
+      // High: 1.1 or 1.2 answered No/Probably no
+      if (isNo(q11) || isNo(q12)) return { key: 'high', label: 'High' };
+      // High: 1.3 Yes/Probably yes (baseline differences suggest problem)
+      if (isYes(q13)) return { key: 'high', label: 'High' };
+      // Some concerns: any No information
+      if (isNI(q11) || isNI(q12) || isNI(q13)) return { key: 'some', label: 'Some concerns' };
+      // Low: all Yes/Probably yes for 1.1+1.2, and 1.3 No/Probably no
+      if (isYes(q11) && isYes(q12) && isNo(q13)) return { key: 'low', label: 'Low' };
+      // Partial answers — suggest some concerns as conservative default
+      if (q11 != null || q12 != null || q13 != null) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D2') {
+      // Domain 2: Deviations from intended interventions (questions 2.1-2.6)
+      var q21 = q['2.1'], q22 = q['2.2'], q23 = q['2.3'], q24 = q['2.4'], q25 = q['2.5'], q26 = q['2.6'];
+      // Blinded pathway: participants+carers unaware AND ITT used
+      var blinded = isNo(q21) && isNo(q22);
+      var itt = isYes(q25);
+      if (blinded && itt) return { key: 'low', label: 'Low' };
+      // High: deviations affected outcome without appropriate analysis
+      if ((isYes(q23) || isYes(q24)) && !itt) return { key: 'high', label: 'High' };
+      // High: deviations arose AND affected outcome
+      if (isYes(q23) && isYes(q24)) return { key: 'high', label: 'High' };
+      // Check if enough answers for a suggestion
+      var anyAnswered = q21 != null || q22 != null || q23 != null || q24 != null || q25 != null || q26 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D3') {
+      // Domain 3: Missing outcome data (questions 3.1-3.4)
+      var q31 = q['3.1'], q32 = q['3.2'], q33 = q['3.3'], q34 = q['3.4'];
+      // Low: data available for all
+      if (isYes(q31)) return { key: 'low', label: 'Low' };
+      // Low: missingness not outcome-dependent (3.3 = No)
+      if (isNo(q33)) return { key: 'low', label: 'Low' };
+      // High: likely outcome-dependent (3.4 = Yes)
+      if (isYes(q34)) return { key: 'high', label: 'High' };
+      // Some concerns if partially answered
+      var anyAnswered = q31 != null || q32 != null || q33 != null || q34 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D4') {
+      // Domain 4: Measurement of the outcome (questions 4.1-4.5)
+      var q41 = q['4.1'], q42 = q['4.2'], q43 = q['4.3'], q44 = q['4.4'], q45 = q['4.5'];
+      // Low: method appropriate (4.1=No) AND (assessors unaware (4.3=No) OR assessment not influenced (4.5=No))
+      if (isNo(q41) && (isNo(q43) || isNo(q45))) return { key: 'low', label: 'Low' };
+      // High: assessment likely influenced (4.5=Yes)
+      if (isYes(q45)) return { key: 'high', label: 'High' };
+      // Some concerns otherwise
+      var anyAnswered = q41 != null || q42 != null || q43 != null || q44 != null || q45 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D5') {
+      // Domain 5: Selection of the reported result (questions 5.1-5.3)
+      var q51 = q['5.1'], q52 = q['5.2'], q53 = q['5.3'];
+      // Low: pre-specified analysis (5.1=Yes) AND no selection (5.2+5.3 = No/Probably no)
+      if (isYes(q51) && isNo(q52) && isNo(q53)) return { key: 'low', label: 'Low' };
+      // High: selection likely (5.2 or 5.3 = Yes/Probably yes)
+      if (isYes(q52) || isYes(q53)) return { key: 'high', label: 'High' };
+      // Some concerns otherwise
+      var anyAnswered = q51 != null || q52 != null || q53 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    return null;
+  }
+
+  function suggestROBINSI(questions) {
+    // Conservative ROBINS-I heuristic:
+    // All No/Probably no -> Low
+    // Any Yes/Probably yes -> at least Moderate
+    // Multiple Yes/Probably yes -> Serious
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+
+    var qids = Object.keys(questions);
+    var yesCount = 0;
+    var noCount = 0;
+    var answered = 0;
+    for (var i = 0; i < qids.length; i++) {
+      var ans = questions[qids[i]];
+      if (ans == null) continue;
+      answered++;
+      if (isYes(ans)) yesCount++;
+      if (isNo(ans)) noCount++;
+    }
+    if (answered === 0) return null;
+
+    if (yesCount === 0 && noCount === answered) {
+      return { key: 'low', label: 'Low' };
+    }
+    if (yesCount >= 2) {
+      return { key: 'serious', label: 'Serious' };
+    }
+    if (yesCount >= 1) {
+      return { key: 'moderate', label: 'Moderate' };
+    }
+    // Mixed answers (NI etc.) — moderate as conservative default
+    return { key: 'moderate', label: 'Moderate' };
+  }
+
   // ===== STUDY MANAGEMENT =====
 
   function addStudy(name, frameworkId) {
@@ -801,6 +957,14 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
       html += '<span class="j-opt' + selClass + '" data-jval="' + jk + '" tabindex="0" role="radio" aria-checked="' + (sd.judgment === jk) + '">' + escapeHtml(fw.judgments[j]) + '</span>';
     }
     html += '</div>';
+
+    // Algorithm-guided suggestion badge
+    var suggestion = suggestJudgment(domain.id, sd.questions, study.framework);
+    if (suggestion) {
+      html += '<div class="suggestion-badge suggest-' + suggestion.key + '" aria-label="Algorithm-guided suggestion: ' + escapeHtml(suggestion.label) + '">';
+      html += 'Suggested: <span class="suggestion-level">' + escapeHtml(suggestion.label) + '</span>';
+      html += '</div>';
+    }
 
     // Rationale
     html += '<div class="rationale-area">';
