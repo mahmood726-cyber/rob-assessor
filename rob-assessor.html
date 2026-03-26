@@ -407,6 +407,9 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
       <button class="btn btn-outline" id="exportJsonBtn" tabindex="0">Export JSON</button>
       <button class="btn btn-outline" id="exportMethodsBtn" tabindex="0">Copy Methods Text</button>
       <button class="btn btn-outline" id="printBtn" tabindex="0">Print Summary</button>
+      <button class="btn btn-primary" id="exportMAIFBtn" tabindex="0" style="background:#2563eb;color:#fff;">Export MAIF</button>
+      <button class="btn btn-primary" id="importMAIFBtn" tabindex="0" style="background:#16a34a;color:#fff;">Import MAIF</button>
+      <input type="file" id="maifFileInput" accept=".json" style="display:none;">
     </div>
   </div>
   <div class="card">
@@ -1306,6 +1309,88 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
     }
   }
 
+  // ===== MAIF IMPORT / EXPORT =====
+
+  function exportMAIF() {
+    if (appState.studies.length === 0) { alert('No studies to export.'); return; }
+    var studies = appState.studies.map(function(s) {
+      var entry = { id: s.id, yi: null, sei: null };
+      var robData = { framework: s.framework, domains: {}, overall: s.overall };
+      var fw = getFramework(s.framework);
+      for (var i = 0; i < fw.domains.length; i++) {
+        var d = fw.domains[i];
+        var sd = s.domains[d.id];
+        robData.domains[d.id] = {
+          label: d.label,
+          judgment: sd.judgment,
+          rationale: sd.rationale
+        };
+      }
+      entry.rob = robData;
+      return entry;
+    });
+    var maif = {
+      version: '1.0',
+      metadata: {
+        effectType: 'rob',
+        createdBy: 'RoBAssessor',
+        createdAt: new Date().toISOString()
+      },
+      studies: studies
+    };
+    downloadFile('rob-assessment-maif.json', JSON.stringify(maif, null, 2), 'application/json');
+    alert('MAIF exported with ' + studies.length + ' studies.');
+  }
+
+  function importMAIFFile(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var maif = JSON.parse(e.target.result);
+        if (!maif.version || !maif.studies || !Array.isArray(maif.studies)) {
+          alert('Invalid MAIF file: missing version or studies array.');
+          return;
+        }
+        var importCount = 0;
+        for (var i = 0; i < maif.studies.length; i++) {
+          var ms = maif.studies[i];
+          if (!ms.id) continue;
+          // Check duplicates
+          var exists = false;
+          for (var j = 0; j < appState.studies.length; j++) {
+            if (appState.studies[j].id === ms.id) { exists = true; break; }
+          }
+          if (exists) continue;
+          // Determine framework
+          var frameworkId = (ms.rob && ms.rob.framework) ? ms.rob.framework : 'rob2';
+          var study = createStudy(ms.id, frameworkId);
+          // Populate domains from rob data if present
+          if (ms.rob && ms.rob.domains) {
+            var fw = getFramework(frameworkId);
+            for (var d = 0; d < fw.domains.length; d++) {
+              var domainId = fw.domains[d].id;
+              if (ms.rob.domains[domainId]) {
+                var rd = ms.rob.domains[domainId];
+                if (rd.judgment) study.domains[domainId].judgment = rd.judgment;
+                if (rd.rationale) study.domains[domainId].rationale = rd.rationale;
+              }
+            }
+            if (ms.rob.overall) study.overall = ms.rob.overall;
+            else study.overall = computeOverall(study);
+          }
+          appState.studies.push(study);
+          importCount++;
+        }
+        renderStudyList();
+        saveToStorage();
+        alert('Imported ' + importCount + ' studies from MAIF.');
+      } catch (err) {
+        alert('Failed to parse MAIF file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
   // ===== STORAGE =====
 
   function saveToStorage() {
@@ -1449,6 +1534,13 @@ textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); fo
     $('exportMethodsBtn').addEventListener('click', exportMethodsText);
     $('importJsonBtn').addEventListener('click', importJSON);
     $('printBtn').addEventListener('click', function() { window.print(); });
+    $('exportMAIFBtn').addEventListener('click', exportMAIF);
+    $('importMAIFBtn').addEventListener('click', function() {
+      $('maifFileInput').click();
+    });
+    $('maifFileInput').addEventListener('change', function() {
+      if (this.files && this.files[0]) { importMAIFFile(this.files[0]); this.value = ''; }
+    });
   }
 
   if (document.readyState === 'loading') {

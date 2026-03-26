@@ -1,12 +1,11 @@
 # RoB Assessor: An Open-Source, Browser-Based Tool for Risk of Bias Assessment Using RoB 2 and ROBINS-I Frameworks
 
-[AUTHOR_1_NAME]^1^, [AUTHOR_2_NAME]^2^, [AUTHOR_3_NAME]^3^
+Mahmood Ahmad^1^
 
-^1^ [AFFILIATION_1]
-^2^ [AFFILIATION_2]
-^3^ [AFFILIATION_3]
+^1^ Royal Free Hospital, London, United Kingdom
 
-Corresponding author: [CORRESPONDING_AUTHOR_NAME], [CORRESPONDING_AUTHOR_EMAIL]
+Correspondence: Mahmood Ahmad, mahmood.ahmad2@nhs.net
+ORCID: 0009-0003-7781-4478
 
 ---
 
@@ -143,15 +142,15 @@ Planned enhancements include QUADAS-2 and Newcastle-Ottawa Scale support, SVG ex
 ## Availability and requirements
 
 - **Project name:** RoB Assessor
-- **Project home page:** [GITHUB_URL_PLACEHOLDER]
-- **Archived version:** [ZENODO_DOI_PLACEHOLDER]
+- **Project home page:** https://github.com/mahmood726-cyber/rob-assessor
+- **Archived version:** [TO BE DEPOSITED]
 - **Operating system(s):** Platform-independent (any modern web browser)
 - **Programming language:** HTML5, CSS3, JavaScript (ES5+)
 - **Other requirements:** Any modern web browser (Chrome, Firefox, Safari, Edge)
-- **License:** [LICENSE_PLACEHOLDER, e.g., MIT or GPL-3.0]
+- **License:** MIT
 - **Any restrictions to use by non-academics:** None
 
-The tool is distributed as a single HTML file that can be downloaded and opened locally. No server, build tools, package managers, or internet connection are required after the initial download. The source code is available under an open-source license at [GITHUB_URL_PLACEHOLDER].
+The tool is distributed as a single HTML file that can be downloaded and opened locally. No server, build tools, package managers, or internet connection are required after the initial download. The source code is available under an open-source license at https://github.com/mahmood726-cyber/rob-assessor.
 
 ## Abbreviations
 
@@ -180,23 +179,23 @@ Not applicable.
 
 ### Availability of data and materials
 
-The application source code and example datasets are available at [GITHUB_URL_PLACEHOLDER]. An archived version is deposited at [ZENODO_DOI_PLACEHOLDER].
+The application source code and example datasets are available at https://github.com/mahmood726-cyber/rob-assessor. An archived version is deposited at [TO BE DEPOSITED].
 
 ### Competing interests
 
-The authors declare that they have no competing interests.
+The author declares no competing interests.
 
 ### Funding
 
-[FUNDING_PLACEHOLDER]
+No external funding.
 
 ### Authors' contributions
 
-[AUTHOR_CONTRIBUTIONS_PLACEHOLDER]
+MA conceived, designed, implemented, tested, and wrote the manuscript.
 
 ### Acknowledgements
 
-[ACKNOWLEDGEMENTS_PLACEHOLDER]
+None.
 
 ## References
 
