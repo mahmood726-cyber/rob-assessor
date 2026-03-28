@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoB Assessor — Risk of Bias Assessment Tool</title>
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-hero: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+  --border-color: #dee2e6;
+  --border-light: #e9ecef;
+
+  --green: #27ae60;
+  --green-bg: rgba(39, 174, 96, 0.12);
+  --amber: #f39c12;
+  --amber-bg: rgba(243, 156, 18, 0.12);
+  --red: #e74c3c;
+  --red-bg: rgba(231, 76, 60, 0.12);
+  --blue: #2980b9;
+  --purple: #8e44ad;
+  --purple-bg: rgba(142, 68, 173, 0.12);
+  --gray: #95a5a6;
+  --gray-bg: rgba(149, 165, 166, 0.12);
+  --teal: #1abc9c;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-card: #252525;
+  --bg-hero: linear-gradient(135deg, #0d0d1a 0%, #111827 50%, #0a1628 100%);
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-color: #3f3f46;
+  --border-light: #2d2d33;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== HERO ===== */
+.hero {
+  background: var(--bg-hero);
+  padding: 1.5rem 2rem 1.2rem;
+  text-align: center;
+  position: relative;
+}
+
+.hero-title { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem; }
+.hero-subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.65); }
+
+.theme-toggle {
+  position: absolute; top: 1rem; right: 1rem;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 0.35rem 0.7rem; border-radius: var(--radius);
+  cursor: pointer; font-size: 0.8rem;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.2); }
+.theme-toggle:focus { outline: 2px solid var(--teal); }
+
+/* ===== TABS ===== */
+.tab-bar {
+  display: flex; background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+  padding: 0 1rem; overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 0.65rem 1.3rem; border: none; background: transparent;
+  color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn:focus { outline: 2px solid var(--teal); outline-offset: -2px; }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+
+.tab-panel { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.card-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.75rem; }
+
+/* ===== FORM ELEMENTS ===== */
+label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.2rem; }
+
+input[type="text"], select, textarea {
+  width: 100%; padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-color); border-radius: var(--radius);
+  font-size: 0.88rem; font-family: var(--font-sans);
+  background: var(--bg-primary); color: var(--text-primary);
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(41,128,185,0.15); }
+textarea { resize: vertical; min-height: 60px; font-family: var(--font-mono); font-size: 0.78rem; }
+
+.form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.65rem; margin-bottom: 0.75rem; }
+.form-group { display: flex; flex-direction: column; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.45rem 1rem; border: 1px solid transparent; border-radius: var(--radius);
+  font-size: 0.88rem; font-weight: 500; cursor: pointer; font-family: var(--font-sans);
+}
+.btn:focus { outline: 2px solid var(--teal); outline-offset: 2px; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: #2471a3; }
+.btn-teal { background: var(--teal); color: #fff; font-weight: 600; }
+.btn-teal:hover { background: #16a085; }
+.btn-outline { background: transparent; color: var(--text-primary); border-color: var(--border-color); }
+.btn-outline:hover { background: var(--bg-secondary); }
+.btn-danger { background: var(--red); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+.btn-danger:hover { background: #c0392b; }
+.btn-sm { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+.btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ===== STUDY LIST ===== */
+.study-list { list-style: none; }
+.study-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem; border: 1px solid var(--border-light);
+  border-radius: var(--radius); margin-bottom: 0.4rem; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.study-item:hover { border-color: var(--teal); }
+.study-item.active { border-color: var(--teal); background: rgba(26,188,156,0.06); }
+.study-item .study-name { flex: 1; font-weight: 500; font-size: 0.9rem; }
+.study-item .study-framework { font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 10px; }
+.fw-rob2 { background: rgba(41,128,185,0.12); color: var(--blue); }
+.fw-robins { background: var(--purple-bg); color: var(--purple); }
+.study-item .study-overall { font-size: 0.78rem; font-weight: 600; }
+
+/* ===== JUDGMENT BADGES ===== */
+.badge-low { color: var(--green); }
+.badge-some { color: var(--amber); }
+.badge-high { color: var(--red); }
+.badge-moderate { color: var(--amber); }
+.badge-serious { color: #e67e22; }
+.badge-critical { color: var(--red); }
+.badge-ni { color: var(--gray); }
+.badge-pending { color: var(--text-muted); }
+
+/* ===== ASSESSMENT PANEL ===== */
+.assess-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; }
+@media (max-width: 800px) { .assess-layout { grid-template-columns: 1fr; } }
+
+.domain-nav { position: sticky; top: 1rem; }
+.domain-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 0.75rem; border: 1px solid var(--border-light);
+  border-radius: var(--radius); margin-bottom: 0.35rem; cursor: pointer;
+  font-size: 0.85rem; transition: all 0.15s;
+}
+.domain-item:hover { border-color: var(--teal); }
+.domain-item.active { border-color: var(--teal); background: rgba(26,188,156,0.06); font-weight: 600; }
+.domain-item .domain-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; background: var(--bg-secondary); color: var(--text-secondary); flex-shrink: 0; }
+.domain-item .domain-label { flex: 1; }
+.domain-item .domain-judgment { font-size: 0.72rem; font-weight: 700; }
+
+.judgment-low .domain-num { background: var(--green-bg); color: var(--green); }
+.judgment-some .domain-num, .judgment-moderate .domain-num { background: var(--amber-bg); color: var(--amber); }
+.judgment-high .domain-num, .judgment-serious .domain-num { background: var(--red-bg); color: var(--red); }
+.judgment-critical .domain-num { background: var(--red-bg); color: #8b0000; }
+
+/* ===== SIGNALING QUESTIONS ===== */
+.sq-card { margin-bottom: 0.75rem; }
+.sq-question { font-size: 0.88rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--text-primary); }
+.sq-options { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+.sq-opt {
+  padding: 0.3rem 0.8rem; border: 1px solid var(--border-color); border-radius: 20px;
+  font-size: 0.78rem; cursor: pointer; background: var(--bg-primary); color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.sq-opt:hover { border-color: var(--teal); }
+.sq-opt.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+.sq-opt:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+.domain-judgment-select {
+  margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border-color);
+}
+.judgment-options { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.j-opt {
+  padding: 0.4rem 1rem; border: 2px solid var(--border-color); border-radius: var(--radius);
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; background: var(--bg-primary);
+  transition: all 0.15s;
+}
+.j-opt:hover { border-color: var(--teal); }
+.j-opt:focus { outline: 2px solid var(--teal); outline-offset: 2px; }
+.j-opt.sel-low { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+.j-opt.sel-some, .j-opt.sel-moderate { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+.j-opt.sel-high, .j-opt.sel-serious { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+.j-opt.sel-critical { border-color: #8b0000; background: rgba(139,0,0,0.1); color: #8b0000; }
+.j-opt.sel-ni { border-color: var(--gray); background: var(--gray-bg); color: var(--gray); }
+
+.suggestion-badge {
+  display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.65rem;
+  border-radius: 12px; font-size: 0.75rem; font-weight: 500;
+  border: 1px dashed var(--border-color); color: var(--text-secondary);
+  background: var(--bg-secondary); opacity: 0.85;
+}
+.suggestion-badge .suggestion-level { font-weight: 700; }
+.suggestion-badge.suggest-low .suggestion-level { color: var(--green); }
+.suggestion-badge.suggest-some .suggestion-level,
+.suggestion-badge.suggest-moderate .suggestion-level { color: var(--amber); }
+.suggestion-badge.suggest-high .suggestion-level,
+.suggestion-badge.suggest-serious .suggestion-level { color: var(--red); }
+.suggestion-badge.suggest-critical .suggestion-level { color: #8b0000; }
+
+.rationale-area { margin-top: 0.75rem; }
+.rationale-area textarea { min-height: 50px; }
+
+/* ===== TRAFFIC LIGHT TABLE ===== */
+.tl-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.tl-table th { padding: 0.5rem 0.4rem; text-align: center; font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid var(--border-color); font-size: 0.72rem; }
+.tl-table th:first-child { text-align: left; min-width: 140px; }
+.tl-table td { padding: 0.4rem; text-align: center; border-bottom: 1px solid var(--border-light); }
+.tl-table td:first-child { text-align: left; font-weight: 500; }
+.tl-table tr:hover { background: var(--bg-secondary); }
+
+.tl-dot {
+  width: 22px; height: 22px; border-radius: 50%; display: inline-block; border: 2px solid transparent;
+}
+.tl-low { background: var(--green); }
+.tl-some, .tl-moderate { background: var(--amber); }
+.tl-high, .tl-serious { background: var(--red); }
+.tl-critical { background: #8b0000; }
+.tl-ni { background: var(--gray); }
+.tl-pending { background: var(--border-color); }
+
+/* ===== BAR CHART ===== */
+.bar-chart { margin-top: 1rem; }
+.bar-row { display: flex; align-items: center; margin-bottom: 0.4rem; }
+.bar-label { width: 160px; font-size: 0.78rem; color: var(--text-secondary); text-align: right; padding-right: 0.75rem; flex-shrink: 0; }
+.bar-track { flex: 1; height: 22px; display: flex; border-radius: 4px; overflow: hidden; background: var(--bg-secondary); }
+.bar-seg { height: 100%; transition: width 0.3s; }
+.bar-seg-low { background: var(--green); }
+.bar-seg-some, .bar-seg-moderate { background: var(--amber); }
+.bar-seg-high, .bar-seg-serious { background: var(--red); }
+.bar-seg-critical { background: #8b0000; }
+.bar-seg-ni { background: var(--gray); }
+.bar-seg-pending { background: var(--border-color); }
+.bar-pct { width: 50px; font-size: 0.72rem; color: var(--text-muted); text-align: left; padding-left: 0.5rem; flex-shrink: 0; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+.empty-state p { font-size: 0.9rem; }
+
+/* ===== PRINT ===== */
+@media print {
+  .hero, .tab-bar, .theme-toggle, .btn, button { display: none !important; }
+  .tab-panel { display: block !important; padding: 0; }
+  .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<header class="hero" role="banner">
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" tabindex="0">Dark Mode</button>
+  <h1 class="hero-title">RoB Assessor</h1>
+  <p class="hero-subtitle">Risk of Bias Assessment Tool &mdash; RoB 2 &amp; ROBINS-I</p>
+</header>
+
+<!-- ===== TAB BAR ===== -->
+<nav class="tab-bar" role="tablist" aria-label="Main navigation">
+  <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-studies" id="tab-studies" tabindex="0">1. Studies</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-assess" id="tab-assess" tabindex="-1">2. Assess</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-summary" id="tab-summary" tabindex="-1">3. Summary</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-export" id="tab-export" tabindex="-1">4. Export</button>
+</nav>
+
+<!-- ===== TAB 1: STUDIES ===== -->
+<div class="tab-panel active" role="tabpanel" id="panel-studies" aria-labelledby="tab-studies">
+  <div class="card">
+    <div class="card-title">Add Study</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="studyId">Study ID / Label</label>
+        <input type="text" id="studyId" placeholder="e.g., Smith 2020">
+      </div>
+      <div class="form-group">
+        <label for="framework">Assessment Framework</label>
+        <select id="framework">
+          <option value="rob2">RoB 2 (Randomized Trials)</option>
+          <option value="robins-i">ROBINS-I (Non-randomized)</option>
+        </select>
+      </div>
+      <div class="form-group" style="justify-content:flex-end;">
+        <button class="btn btn-teal" id="addStudyBtn" tabindex="0">Add Study</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Import / Batch Add</div>
+    <div class="form-group">
+      <label for="csvImport">Paste CSV (study_id, framework[rob2|robins-i]):</label>
+      <textarea id="csvImport" rows="4" placeholder="Smith 2020, rob2&#10;Jones 2021, robins-i&#10;CRASH 2004, rob2"></textarea>
+    </div>
+    <div style="margin-top:0.5rem;">
+      <button class="btn btn-primary btn-sm" id="importCsvBtn" tabindex="0">Import CSV</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Studies <span id="studyCountLabel" style="font-weight:400; color:var(--text-secondary); font-size:0.85rem;"></span></div>
+    <ul class="study-list" id="studyList"></ul>
+    <div id="emptyStudies" class="empty-state">
+      <p>No studies added yet. Add studies above or import from CSV.</p>
+    </div>
+    <div style="margin-top:0.75rem;" id="studyActions" style="display:none;">
+      <button class="btn btn-outline btn-sm" id="clearAllBtn" tabindex="0">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: ASSESS ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-assess" aria-labelledby="tab-assess">
+  <div id="assessEmpty" class="empty-state">
+    <p>Add studies first, then select one to begin assessment.</p>
+  </div>
+  <div id="assessContent" style="display:none;">
+    <div class="assess-layout">
+      <!-- Domain navigation -->
+      <div>
+        <div class="card" style="padding:0.75rem;">
+          <div style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.5rem;" id="assessStudyLabel">Study: --</div>
+          <div id="domainNav"></div>
+          <div style="margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid var(--border-light);">
+            <div style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.3rem;">Overall Judgment</div>
+            <div id="overallJudgment" style="font-weight:700; font-size:0.95rem;" class="badge-pending">Pending</div>
+          </div>
+        </div>
+      </div>
+      <!-- Assessment area -->
+      <div>
+        <div class="card" id="domainCard">
+          <div class="card-title" id="domainTitle">Select a domain</div>
+          <div id="domainQuestions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: SUMMARY ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
+  <div id="summaryEmpty" class="empty-state">
+    <p>Complete assessments to see the summary.</p>
+  </div>
+  <div id="summaryContent" style="display:none;">
+    <div class="card">
+      <div class="card-title">Traffic Light Table</div>
+      <div style="overflow-x:auto;">
+        <table class="tl-table" id="tlTable" aria-label="Risk of bias traffic light summary">
+          <thead id="tlHead"></thead>
+          <tbody id="tlBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Domain-Level Summary (Weighted Bar Chart)</div>
+      <div id="barChart" class="bar-chart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 4: EXPORT ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-export" aria-labelledby="tab-export">
+  <div class="card">
+    <div class="card-title">Export Options</div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="exportCsvBtn" tabindex="0">Export CSV</button>
+      <button class="btn btn-outline" id="exportJsonBtn" tabindex="0">Export JSON</button>
+      <button class="btn btn-outline" id="exportMethodsBtn" tabindex="0">Copy Methods Text</button>
+      <button class="btn btn-outline" id="printBtn" tabindex="0">Print Summary</button>
+      <button class="btn btn-primary" id="exportMAIFBtn" tabindex="0" style="background:#2563eb;color:#fff;">Export MAIF</button>
+      <button class="btn btn-primary" id="importMAIFBtn" tabindex="0" style="background:#16a34a;color:#fff;">Import MAIF</button>
+      <input type="file" id="maifFileInput" accept=".json" style="display:none;">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Import Existing Assessment</div>
+    <div class="form-group">
+      <label for="jsonImport">Paste JSON (from a previous export):</label>
+      <textarea id="jsonImport" rows="6" placeholder='Paste JSON array here...'></textarea>
+    </div>
+    <div style="margin-top:0.5rem;">
+      <button class="btn btn-primary btn-sm" id="importJsonBtn" tabindex="0">Import JSON</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   RoB Assessor — Risk of Bias Assessment Tool
+   Frameworks: RoB 2 (RCTs) & ROBINS-I (Non-randomized)
+   =========================================================== */
+(function() {
+  'use strict';
+
+  // ===== UTILITY =====
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  var $ = function(id) { return document.getElementById(id); };
+
+  // ===== FRAMEWORK DEFINITIONS =====
+
+  var ROB2 = {
+    id: 'rob2',
+    label: 'RoB 2',
+    judgments: ['Low', 'Some concerns', 'High'],
+    judgmentKeys: ['low', 'some', 'high'],
+    domains: [
+      {
+        id: 'D1', label: 'Randomization process',
+        questions: [
+          { id: '1.1', text: 'Was the allocation sequence random?' },
+          { id: '1.2', text: 'Was the allocation sequence concealed until participants were enrolled and assigned?' },
+          { id: '1.3', text: 'Did baseline differences between groups suggest a problem with the randomization process?' }
+        ]
+      },
+      {
+        id: 'D2', label: 'Deviations from intended interventions',
+        questions: [
+          { id: '2.1', text: 'Were participants aware of their assigned intervention during the trial?' },
+          { id: '2.2', text: 'Were carers and people delivering the interventions aware of the assigned intervention?' },
+          { id: '2.3', text: 'Were there deviations from the intended intervention that arose because of the trial context?' },
+          { id: '2.4', text: 'Were these deviations likely to have affected the outcome?' },
+          { id: '2.5', text: 'Was an appropriate analysis used to estimate the effect of assignment to intervention?' },
+          { id: '2.6', text: 'Was there potential for a substantial impact of analyzing participants in the wrong group?' }
+        ]
+      },
+      {
+        id: 'D3', label: 'Missing outcome data',
+        questions: [
+          { id: '3.1', text: 'Were data for this outcome available for all, or nearly all, participants randomized?' },
+          { id: '3.2', text: 'Is there evidence that the result was not biased by missing outcome data?' },
+          { id: '3.3', text: 'Could missingness in the outcome depend on its true value?' },
+          { id: '3.4', text: 'Is it likely that missingness in the outcome depended on its true value?' }
+        ]
+      },
+      {
+        id: 'D4', label: 'Measurement of the outcome',
+        questions: [
+          { id: '4.1', text: 'Was the method of measuring the outcome inappropriate?' },
+          { id: '4.2', text: 'Could measurement or ascertainment of the outcome have differed between groups?' },
+          { id: '4.3', text: 'Were outcome assessors aware of the intervention received by study participants?' },
+          { id: '4.4', text: 'Could assessment of the outcome have been influenced by knowledge of the intervention received?' },
+          { id: '4.5', text: 'Is it likely that assessment of the outcome was influenced by knowledge of the intervention received?' }
+        ]
+      },
+      {
+        id: 'D5', label: 'Selection of the reported result',
+        questions: [
+          { id: '5.1', text: 'Were the data that produced this result analysed in accordance with a pre-specified analysis plan?' },
+          { id: '5.2', text: 'Is the numerical result being assessed likely to have been selected, on the basis of the results, from multiple eligible outcome measurements or analyses?' },
+          { id: '5.3', text: 'Is the numerical result being assessed likely to have been selected, on the basis of the results, from multiple eligible analyses of the data?' }
+        ]
+      }
+    ],
+    sqOptions: ['Yes', 'Probably yes', 'Probably no', 'No', 'No information']
+  };
+
+  var ROBINS_I = {
+    id: 'robins-i',
+    label: 'ROBINS-I',
+    judgments: ['Low', 'Moderate', 'Serious', 'Critical', 'No information'],
+    judgmentKeys: ['low', 'moderate', 'serious', 'critical', 'ni'],
+    domains: [
+      {
+        id: 'D1', label: 'Confounding',
+        questions: [
+          { id: '1.1', text: 'Is there potential for confounding of the effect of intervention in this study?' },
+          { id: '1.2', text: 'Was the analysis based on splitting participants by intervention received (rather than assigned)?' },
+          { id: '1.3', text: 'Were the confounding domains measured validly and reliably?' },
+          { id: '1.4', text: 'Did the authors use an appropriate analysis method that controlled for all the important confounding domains?' }
+        ]
+      },
+      {
+        id: 'D2', label: 'Selection of participants',
+        questions: [
+          { id: '2.1', text: 'Was selection of participants into the study (or into the analysis) based on participant characteristics observed after the start of intervention?' },
+          { id: '2.2', text: 'Do start of follow-up and start of intervention coincide for most participants?' },
+          { id: '2.3', text: 'Were adjustment techniques used that are likely to correct for the presence of selection biases?' }
+        ]
+      },
+      {
+        id: 'D3', label: 'Classification of interventions',
+        questions: [
+          { id: '3.1', text: 'Were intervention groups clearly defined?' },
+          { id: '3.2', text: 'Was the information used to define intervention groups recorded at the start of the intervention?' },
+          { id: '3.3', text: 'Could classification of intervention status have been affected by knowledge of the outcome or risk of the outcome?' }
+        ]
+      },
+      {
+        id: 'D4', label: 'Deviations from intended interventions',
+        questions: [
+          { id: '4.1', text: 'Were there deviations from the intended intervention beyond what would be expected in usual practice?' },
+          { id: '4.2', text: 'Were these deviations from intended intervention unbalanced between groups and likely to have affected the outcome?' },
+          { id: '4.3', text: 'Were important co-interventions balanced across intervention groups?' },
+          { id: '4.4', text: 'Was the intervention implemented successfully for most participants?' },
+          { id: '4.5', text: 'Did study participants adhere to the assigned intervention regimen?' }
+        ]
+      },
+      {
+        id: 'D5', label: 'Missing data',
+        questions: [
+          { id: '5.1', text: 'Were outcome data available for all, or nearly all, participants?' },
+          { id: '5.2', text: 'Were participants excluded due to missing data on intervention status?' },
+          { id: '5.3', text: 'Were participants excluded due to missing data on other variables needed for the analysis?' },
+          { id: '5.4', text: 'Is there evidence that results were robust to the presence of missing data?' }
+        ]
+      },
+      {
+        id: 'D6', label: 'Measurement of outcomes',
+        questions: [
+          { id: '6.1', text: 'Could the outcome measure have been influenced by knowledge of the intervention received?' },
+          { id: '6.2', text: 'Were outcome assessors aware of the intervention received by study participants?' },
+          { id: '6.3', text: 'Were the methods of outcome assessment comparable across intervention groups?' },
+          { id: '6.4', text: 'Were any systematic errors in measurement of the outcome related to intervention received?' }
+        ]
+      },
+      {
+        id: 'D7', label: 'Selection of the reported result',
+        questions: [
+          { id: '7.1', text: 'Is the reported effect estimate likely to be selected, on the basis of the results, from multiple outcome measurements within the outcome domain?' },
+          { id: '7.2', text: 'Is the reported effect estimate likely to be selected, on the basis of the results, from multiple analyses of the intervention-outcome relationship?' },
+          { id: '7.3', text: 'Is the reported effect estimate likely to be selected, on the basis of the results, from different subgroups?' }
+        ]
+      }
+    ],
+    sqOptions: ['Yes', 'Probably yes', 'Probably no', 'No', 'No information']
+  };
+
+  function getFramework(id) { return id === 'robins-i' ? ROBINS_I : ROB2; }
+
+  // ===== DATA MODEL =====
+
+  var appState = {
+    studies: [],        // [{id, framework, domains: {D1: {judgment, rationale, questions: {q1: answer, ...}}, ...}, overall}]
+    activeStudyIdx: -1,
+    activeDomainIdx: 0
+  };
+
+  function createStudy(name, frameworkId) {
+    var fw = getFramework(frameworkId);
+    var domains = {};
+    for (var i = 0; i < fw.domains.length; i++) {
+      var d = fw.domains[i];
+      var qs = {};
+      for (var j = 0; j < d.questions.length; j++) {
+        qs[d.questions[j].id] = null;
+      }
+      domains[d.id] = { judgment: null, rationale: '', questions: qs };
+    }
+    return { id: name, framework: frameworkId, domains: domains, overall: null };
+  }
+
+  function computeOverall(study) {
+    var fw = getFramework(study.framework);
+    var domainJudgments = [];
+    for (var i = 0; i < fw.domains.length; i++) {
+      var j = study.domains[fw.domains[i].id].judgment;
+      if (j != null) domainJudgments.push(j);
+    }
+    if (domainJudgments.length === 0) return null;
+    if (domainJudgments.length < fw.domains.length) return null; // incomplete
+
+    if (study.framework === 'rob2') {
+      // RoB 2: overall = worst domain (Low < Some concerns < High)
+      var hasHigh = domainJudgments.indexOf('high') >= 0;
+      var hasSome = domainJudgments.indexOf('some') >= 0;
+      if (hasHigh) return 'high';
+      if (hasSome) return 'some';
+      return 'low';
+    } else {
+      // ROBINS-I: overall = worst domain
+      var order = ['low', 'moderate', 'serious', 'critical', 'ni'];
+      var worst = 0;
+      for (var i = 0; i < domainJudgments.length; i++) {
+        var idx = order.indexOf(domainJudgments[i]);
+        if (idx > worst) worst = idx;
+      }
+      return order[worst];
+    }
+  }
+
+  // ===== ALGORITHM-GUIDED JUDGMENT SUGGESTION =====
+  // Based on RoB 2 guidance (Sterne 2019) and conservative ROBINS-I heuristic.
+  // Returns { key: 'low'|'some'|'high'|..., label: 'Low'|... } or null if insufficient answers.
+
+  function suggestJudgment(domainId, questions, framework) {
+    // Helper: check if an answer is in a set of values
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+    function isNI(ans)  { return ans === 'No information'; }
+
+    // Check if all questions have been answered
+    var qids = Object.keys(questions);
+    var answered = 0;
+    for (var i = 0; i < qids.length; i++) {
+      if (questions[qids[i]] != null) answered++;
+    }
+    if (answered === 0) return null; // No answers yet, no suggestion
+
+    if (framework === 'rob2') {
+      return suggestRoB2(domainId, questions);
+    } else if (framework === 'robins-i') {
+      return suggestROBINSI(questions);
+    }
+    return null;
+  }
+
+  function suggestRoB2(domainId, q) {
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+    function isNI(ans)  { return ans === 'No information'; }
+
+    if (domainId === 'D1') {
+      // Domain 1: Randomization process (questions 1.1, 1.2, 1.3)
+      var q11 = q['1.1'], q12 = q['1.2'], q13 = q['1.3'];
+      // High: 1.1 or 1.2 answered No/Probably no
+      if (isNo(q11) || isNo(q12)) return { key: 'high', label: 'High' };
+      // High: 1.3 Yes/Probably yes (baseline differences suggest problem)
+      if (isYes(q13)) return { key: 'high', label: 'High' };
+      // Some concerns: any No information
+      if (isNI(q11) || isNI(q12) || isNI(q13)) return { key: 'some', label: 'Some concerns' };
+      // Low: all Yes/Probably yes for 1.1+1.2, and 1.3 No/Probably no
+      if (isYes(q11) && isYes(q12) && isNo(q13)) return { key: 'low', label: 'Low' };
+      // Partial answers — suggest some concerns as conservative default
+      if (q11 != null || q12 != null || q13 != null) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D2') {
+      // Domain 2: Deviations from intended interventions (questions 2.1-2.6)
+      var q21 = q['2.1'], q22 = q['2.2'], q23 = q['2.3'], q24 = q['2.4'], q25 = q['2.5'], q26 = q['2.6'];
+      // Blinded pathway: participants+carers unaware AND ITT used
+      var blinded = isNo(q21) && isNo(q22);
+      var itt = isYes(q25);
+      if (blinded && itt) return { key: 'low', label: 'Low' };
+      // High: deviations affected outcome without appropriate analysis
+      if ((isYes(q23) || isYes(q24)) && !itt) return { key: 'high', label: 'High' };
+      // High: deviations arose AND affected outcome
+      if (isYes(q23) && isYes(q24)) return { key: 'high', label: 'High' };
+      // Check if enough answers for a suggestion
+      var anyAnswered = q21 != null || q22 != null || q23 != null || q24 != null || q25 != null || q26 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D3') {
+      // Domain 3: Missing outcome data (questions 3.1-3.4)
+      var q31 = q['3.1'], q32 = q['3.2'], q33 = q['3.3'], q34 = q['3.4'];
+      // Low: data available for all
+      if (isYes(q31)) return { key: 'low', label: 'Low' };
+      // Low: missingness not outcome-dependent (3.3 = No)
+      if (isNo(q33)) return { key: 'low', label: 'Low' };
+      // High: likely outcome-dependent (3.4 = Yes)
+      if (isYes(q34)) return { key: 'high', label: 'High' };
+      // Some concerns if partially answered
+      var anyAnswered = q31 != null || q32 != null || q33 != null || q34 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D4') {
+      // Domain 4: Measurement of the outcome (questions 4.1-4.5)
+      var q41 = q['4.1'], q42 = q['4.2'], q43 = q['4.3'], q44 = q['4.4'], q45 = q['4.5'];
+      // Low: method appropriate (4.1=No) AND (assessors unaware (4.3=No) OR assessment not influenced (4.5=No))
+      if (isNo(q41) && (isNo(q43) || isNo(q45))) return { key: 'low', label: 'Low' };
+      // High: assessment likely influenced (4.5=Yes)
+      if (isYes(q45)) return { key: 'high', label: 'High' };
+      // Some concerns otherwise
+      var anyAnswered = q41 != null || q42 != null || q43 != null || q44 != null || q45 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    if (domainId === 'D5') {
+      // Domain 5: Selection of the reported result (questions 5.1-5.3)
+      var q51 = q['5.1'], q52 = q['5.2'], q53 = q['5.3'];
+      // Low: pre-specified analysis (5.1=Yes) AND no selection (5.2+5.3 = No/Probably no)
+      if (isYes(q51) && isNo(q52) && isNo(q53)) return { key: 'low', label: 'Low' };
+      // High: selection likely (5.2 or 5.3 = Yes/Probably yes)
+      if (isYes(q52) || isYes(q53)) return { key: 'high', label: 'High' };
+      // Some concerns otherwise
+      var anyAnswered = q51 != null || q52 != null || q53 != null;
+      if (anyAnswered) return { key: 'some', label: 'Some concerns' };
+      return null;
+    }
+
+    return null;
+  }
+
+  function suggestROBINSI(questions) {
+    // Conservative ROBINS-I heuristic:
+    // All No/Probably no -> Low
+    // Any Yes/Probably yes -> at least Moderate
+    // Multiple Yes/Probably yes -> Serious
+    function isYes(ans) { return ans === 'Yes' || ans === 'Probably yes'; }
+    function isNo(ans)  { return ans === 'No' || ans === 'Probably no'; }
+
+    var qids = Object.keys(questions);
+    var yesCount = 0;
+    var noCount = 0;
+    var answered = 0;
+    for (var i = 0; i < qids.length; i++) {
+      var ans = questions[qids[i]];
+      if (ans == null) continue;
+      answered++;
+      if (isYes(ans)) yesCount++;
+      if (isNo(ans)) noCount++;
+    }
+    if (answered === 0) return null;
+
+    if (yesCount === 0 && noCount === answered) {
+      return { key: 'low', label: 'Low' };
+    }
+    if (yesCount >= 2) {
+      return { key: 'serious', label: 'Serious' };
+    }
+    if (yesCount >= 1) {
+      return { key: 'moderate', label: 'Moderate' };
+    }
+    // Mixed answers (NI etc.) — moderate as conservative default
+    return { key: 'moderate', label: 'Moderate' };
+  }
+
+  // ===== STUDY MANAGEMENT =====
+
+  function addStudy(name, frameworkId) {
+    if (!name.trim()) return;
+    // Check for duplicate
+    for (var i = 0; i < appState.studies.length; i++) {
+      if (appState.studies[i].id === name.trim()) {
+        alert('Study "' + name + '" already exists.');
+        return;
+      }
+    }
+    var study = createStudy(name.trim(), frameworkId);
+    appState.studies.push(study);
+    renderStudyList();
+    saveToStorage();
+  }
+
+  function removeStudy(idx) {
+    appState.studies.splice(idx, 1);
+    if (appState.activeStudyIdx >= appState.studies.length) {
+      appState.activeStudyIdx = appState.studies.length - 1;
+    }
+    renderStudyList();
+    renderAssessPanel();
+    saveToStorage();
+  }
+
+  // ===== RENDERING =====
+
+  function renderStudyList() {
+    var list = $('studyList');
+    var empty = $('emptyStudies');
+    var count = $('studyCountLabel');
+    var actions = $('studyActions');
+
+    if (appState.studies.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = '';
+      count.textContent = '';
+      actions.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    count.textContent = '(' + appState.studies.length + ' studies)';
+    actions.style.display = '';
+
+    var html = '';
+    for (var i = 0; i < appState.studies.length; i++) {
+      var s = appState.studies[i];
+      var fw = getFramework(s.framework);
+      var overall = computeOverall(s);
+      s.overall = overall;
+
+      var overallLabel = overall ? capitalizeJudgment(overall, s.framework) : 'Pending';
+      var overallClass = overall ? 'badge-' + overall : 'badge-pending';
+      var fwClass = s.framework === 'rob2' ? 'fw-rob2' : 'fw-robins';
+      var activeClass = i === appState.activeStudyIdx ? ' active' : '';
+
+      html += '<li class="study-item' + activeClass + '" data-idx="' + i + '" tabindex="0" role="button" aria-label="Select ' + escapeHtml(s.id) + '">';
+      html += '<span class="study-name">' + escapeHtml(s.id) + '</span>';
+      html += '<span class="study-framework ' + fwClass + '">' + escapeHtml(fw.label) + '</span>';
+      html += '<span class="study-overall ' + overallClass + '">' + escapeHtml(overallLabel) + '</span>';
+      html += '<button class="btn btn-danger" data-delidx="' + i + '" tabindex="0" aria-label="Delete ' + escapeHtml(s.id) + '">X</button>';
+      html += '</li>';
+    }
+    list.innerHTML = html;
+
+    // Attach click handlers
+    var items = list.querySelectorAll('.study-item');
+    for (var j = 0; j < items.length; j++) {
+      items[j].addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-danger')) return;
+        var idx = parseInt(this.getAttribute('data-idx'), 10);
+        appState.activeStudyIdx = idx;
+        appState.activeDomainIdx = 0;
+        renderStudyList();
+        renderAssessPanel();
+        showTab('assess');
+      });
+      items[j].addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+      });
+    }
+    var delBtns = list.querySelectorAll('[data-delidx]');
+    for (var j = 0; j < delBtns.length; j++) {
+      delBtns[j].addEventListener('click', function(e) {
+        e.stopPropagation();
+        var idx = parseInt(this.getAttribute('data-delidx'), 10);
+        removeStudy(idx);
+      });
+    }
+  }
+
+  function capitalizeJudgment(key, framework) {
+    var map = {
+      low: 'Low', some: 'Some concerns', high: 'High',
+      moderate: 'Moderate', serious: 'Serious', critical: 'Critical', ni: 'No information'
+    };
+    return map[key] || key;
+  }
+
+  // ===== ASSESSMENT PANEL =====
+
+  function renderAssessPanel() {
+    if (appState.activeStudyIdx < 0 || appState.activeStudyIdx >= appState.studies.length) {
+      $('assessContent').style.display = 'none';
+      $('assessEmpty').style.display = '';
+      return;
+    }
+    $('assessContent').style.display = '';
+    $('assessEmpty').style.display = 'none';
+
+    var study = appState.studies[appState.activeStudyIdx];
+    var fw = getFramework(study.framework);
+
+    $('assessStudyLabel').textContent = 'Study: ' + study.id + ' (' + fw.label + ')';
+
+    // Domain navigation
+    var navHtml = '';
+    for (var i = 0; i < fw.domains.length; i++) {
+      var d = fw.domains[i];
+      var dj = study.domains[d.id].judgment;
+      var jClass = dj ? ' judgment-' + dj : '';
+      var activeClass = i === appState.activeDomainIdx ? ' active' : '';
+      var jLabel = dj ? capitalizeJudgment(dj, study.framework) : '';
+
+      navHtml += '<div class="domain-item' + jClass + activeClass + '" data-didx="' + i + '" tabindex="0" role="button">';
+      navHtml += '<span class="domain-num">' + (i + 1) + '</span>';
+      navHtml += '<span class="domain-label">' + escapeHtml(d.label) + '</span>';
+      if (jLabel) navHtml += '<span class="domain-judgment">' + escapeHtml(jLabel) + '</span>';
+      navHtml += '</div>';
+    }
+    $('domainNav').innerHTML = navHtml;
+
+    // Attach nav click handlers
+    var navItems = $('domainNav').querySelectorAll('.domain-item');
+    for (var j = 0; j < navItems.length; j++) {
+      navItems[j].addEventListener('click', function() {
+        appState.activeDomainIdx = parseInt(this.getAttribute('data-didx'), 10);
+        renderAssessPanel();
+      });
+      navItems[j].addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+      });
+    }
+
+    // Overall judgment display
+    var overall = computeOverall(study);
+    study.overall = overall;
+    var ojEl = $('overallJudgment');
+    ojEl.textContent = overall ? capitalizeJudgment(overall, study.framework) : 'Pending';
+    ojEl.className = overall ? 'badge-' + overall : 'badge-pending';
+
+    // Render active domain
+    renderDomainQuestions(study, fw);
+  }
+
+  function renderDomainQuestions(study, fw) {
+    var di = appState.activeDomainIdx;
+    if (di < 0 || di >= fw.domains.length) return;
+
+    var domain = fw.domains[di];
+    var sd = study.domains[domain.id];
+
+    $('domainTitle').textContent = 'Domain ' + (di + 1) + ': ' + domain.label;
+
+    var html = '';
+
+    // Signaling questions
+    for (var q = 0; q < domain.questions.length; q++) {
+      var question = domain.questions[q];
+      var answer = sd.questions[question.id];
+
+      html += '<div class="sq-card">';
+      html += '<div class="sq-question">' + escapeHtml(question.id) + '. ' + escapeHtml(question.text) + '</div>';
+      html += '<div class="sq-options">';
+      for (var o = 0; o < fw.sqOptions.length; o++) {
+        var opt = fw.sqOptions[o];
+        var selClass = answer === opt ? ' selected' : '';
+        html += '<span class="sq-opt' + selClass + '" data-qid="' + escapeHtml(question.id) + '" data-val="' + escapeHtml(opt) + '" tabindex="0" role="radio" aria-checked="' + (answer === opt) + '">' + escapeHtml(opt) + '</span>';
+      }
+      html += '</div>';
+      html += '</div>';
+    }
+
+    // Domain judgment
+    html += '<div class="domain-judgment-select">';
+    html += '<div style="font-weight:600; font-size:0.9rem;">Domain judgment for: ' + escapeHtml(domain.label) + '</div>';
+    html += '<div class="judgment-options">';
+    for (var j = 0; j < fw.judgmentKeys.length; j++) {
+      var jk = fw.judgmentKeys[j];
+      var selClass = sd.judgment === jk ? ' sel-' + jk : '';
+      html += '<span class="j-opt' + selClass + '" data-jval="' + jk + '" tabindex="0" role="radio" aria-checked="' + (sd.judgment === jk) + '">' + escapeHtml(fw.judgments[j]) + '</span>';
+    }
+    html += '</div>';
+
+    // Algorithm-guided suggestion badge
+    var suggestion = suggestJudgment(domain.id, sd.questions, study.framework);
+    if (suggestion) {
+      html += '<div class="suggestion-badge suggest-' + suggestion.key + '" aria-label="Algorithm-guided suggestion: ' + escapeHtml(suggestion.label) + '">';
+      html += 'Suggested: <span class="suggestion-level">' + escapeHtml(suggestion.label) + '</span>';
+      html += '</div>';
+    }
+
+    // Rationale
+    html += '<div class="rationale-area">';
+    html += '<label>Support for judgment (rationale):</label>';
+    html += '<textarea id="rationaleInput" placeholder="Provide rationale for the judgment...">' + escapeHtml(sd.rationale) + '</textarea>';
+    html += '</div>';
+    html += '</div>';
+
+    $('domainQuestions').innerHTML = html;
+
+    // Attach signaling question handlers
+    var sqOpts = $('domainQuestions').querySelectorAll('.sq-opt');
+    for (var k = 0; k < sqOpts.length; k++) {
+      sqOpts[k].addEventListener('click', function() {
+        var qid = this.getAttribute('data-qid');
+        var val = this.getAttribute('data-val');
+        sd.questions[qid] = val;
+        renderDomainQuestions(study, fw);
+        saveToStorage();
+      });
+      sqOpts[k].addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+      });
+    }
+
+    // Attach judgment handlers
+    var jOpts = $('domainQuestions').querySelectorAll('.j-opt');
+    for (var k = 0; k < jOpts.length; k++) {
+      jOpts[k].addEventListener('click', function() {
+        sd.judgment = this.getAttribute('data-jval');
+        study.overall = computeOverall(study);
+        renderAssessPanel();
+        renderStudyList();
+        saveToStorage();
+      });
+      jOpts[k].addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+      });
+    }
+
+    // Rationale change handler
+    var ratInput = $('rationaleInput');
+    if (ratInput) {
+      ratInput.addEventListener('change', function() {
+        sd.rationale = this.value;
+        saveToStorage();
+      });
+    }
+  }
+
+  // ===== SUMMARY RENDERING =====
+
+  function renderSummary() {
+    if (appState.studies.length === 0) {
+      $('summaryContent').style.display = 'none';
+      $('summaryEmpty').style.display = '';
+      return;
+    }
+    $('summaryContent').style.display = '';
+    $('summaryEmpty').style.display = 'none';
+
+    renderTrafficLightTable();
+    renderBarChart();
+  }
+
+  function renderTrafficLightTable() {
+    // Group by framework
+    var rob2Studies = appState.studies.filter(function(s) { return s.framework === 'rob2'; });
+    var robinsStudies = appState.studies.filter(function(s) { return s.framework === 'robins-i'; });
+
+    var html = '';
+
+    if (rob2Studies.length > 0) {
+      html += renderTLSection(rob2Studies, ROB2);
+    }
+    if (robinsStudies.length > 0) {
+      if (rob2Studies.length > 0) html += '<tr><td colspan="20" style="padding:1rem;border:none;"></td></tr>';
+      html += renderTLSection(robinsStudies, ROBINS_I);
+    }
+
+    // Build header for each framework
+    var headHtml = '';
+    if (rob2Studies.length > 0) {
+      headHtml += '<tr><th>Study (RoB 2)</th>';
+      for (var i = 0; i < ROB2.domains.length; i++) {
+        headHtml += '<th title="' + escapeHtml(ROB2.domains[i].label) + '">D' + (i + 1) + '</th>';
+      }
+      headHtml += '<th>Overall</th></tr>';
+    }
+    if (robinsStudies.length > 0) {
+      headHtml += '<tr><th>Study (ROBINS-I)</th>';
+      for (var i = 0; i < ROBINS_I.domains.length; i++) {
+        headHtml += '<th title="' + escapeHtml(ROBINS_I.domains[i].label) + '">D' + (i + 1) + '</th>';
+      }
+      headHtml += '<th>Overall</th></tr>';
+    }
+
+    $('tlHead').innerHTML = headHtml;
+    $('tlBody').innerHTML = html;
+  }
+
+  function renderTLSection(studies, fw) {
+    var html = '';
+    for (var s = 0; s < studies.length; s++) {
+      var study = studies[s];
+      html += '<tr><td>' + escapeHtml(study.id) + '</td>';
+      for (var d = 0; d < fw.domains.length; d++) {
+        var dj = study.domains[fw.domains[d].id].judgment;
+        var dotClass = dj ? 'tl-' + dj : 'tl-pending';
+        var title = dj ? capitalizeJudgment(dj, study.framework) : 'Not assessed';
+        html += '<td><span class="tl-dot ' + dotClass + '" title="' + escapeHtml(title) + '" aria-label="' + escapeHtml(fw.domains[d].label) + ': ' + escapeHtml(title) + '"></span></td>';
+      }
+      var overall = computeOverall(study);
+      var overallDot = overall ? 'tl-' + overall : 'tl-pending';
+      var overallTitle = overall ? capitalizeJudgment(overall, study.framework) : 'Pending';
+      html += '<td><span class="tl-dot ' + overallDot + '" title="' + escapeHtml(overallTitle) + '"></span></td>';
+      html += '</tr>';
+    }
+    return html;
+  }
+
+  function renderBarChart() {
+    var chart = $('barChart');
+    // Combine all frameworks, show per-domain distribution
+    // Group by unique domain labels
+    var domainStats = {};
+
+    for (var s = 0; s < appState.studies.length; s++) {
+      var study = appState.studies[s];
+      var fw = getFramework(study.framework);
+      for (var d = 0; d < fw.domains.length; d++) {
+        var label = fw.domains[d].label;
+        var key = study.framework + ':' + fw.domains[d].id;
+        if (!domainStats[key]) domainStats[key] = { label: label, fw: study.framework, counts: {} };
+        var j = study.domains[fw.domains[d].id].judgment || 'pending';
+        domainStats[key].counts[j] = (domainStats[key].counts[j] || 0) + 1;
+      }
+    }
+
+    var allKeys = Object.keys(domainStats);
+    if (allKeys.length === 0) { chart.innerHTML = ''; return; }
+
+    var n = appState.studies.length;
+    var html = '';
+
+    // Get appropriate segment order based on frameworks present
+    var segOrder = ['low', 'some', 'moderate', 'high', 'serious', 'critical', 'ni', 'pending'];
+
+    for (var k = 0; k < allKeys.length; k++) {
+      var ds = domainStats[allKeys[k]];
+      html += '<div class="bar-row">';
+      html += '<div class="bar-label">' + escapeHtml(ds.label) + '</div>';
+      html += '<div class="bar-track">';
+
+      var total = 0;
+      for (var j in ds.counts) total += ds.counts[j];
+
+      for (var si = 0; si < segOrder.length; si++) {
+        var seg = segOrder[si];
+        var c = ds.counts[seg] || 0;
+        if (c === 0) continue;
+        var pct = (c / total * 100);
+        html += '<div class="bar-seg bar-seg-' + seg + '" style="width:' + pct.toFixed(1) + '%" title="' + capitalizeJudgment(seg, ds.fw) + ': ' + c + '/' + total + '"></div>';
+      }
+
+      html += '</div>';
+      // Show % low risk
+      var lowCount = ds.counts['low'] || 0;
+      html += '<div class="bar-pct">' + Math.round(lowCount / total * 100) + '% low</div>';
+      html += '</div>';
+    }
+
+    // Overall
+    html += '<div class="bar-row" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid var(--border-light);">';
+    html += '<div class="bar-label" style="font-weight:600;">Overall</div>';
+    html += '<div class="bar-track">';
+
+    var overallCounts = {};
+    for (var s = 0; s < appState.studies.length; s++) {
+      var ov = appState.studies[s].overall || 'pending';
+      overallCounts[ov] = (overallCounts[ov] || 0) + 1;
+    }
+    for (var si = 0; si < segOrder.length; si++) {
+      var seg = segOrder[si];
+      var c = overallCounts[seg] || 0;
+      if (c === 0) continue;
+      var pct = (c / n * 100);
+      html += '<div class="bar-seg bar-seg-' + seg + '" style="width:' + pct.toFixed(1) + '%"></div>';
+    }
+    html += '</div>';
+    var overallLow = overallCounts['low'] || 0;
+    html += '<div class="bar-pct">' + Math.round(overallLow / n * 100) + '% low</div>';
+    html += '</div>';
+
+    chart.innerHTML = html;
+  }
+
+  // ===== EXPORT =====
+
+  function exportCSV() {
+    if (appState.studies.length === 0) { alert('No studies to export.'); return; }
+
+    var lines = [];
+    // Header
+    var headers = ['Study', 'Framework'];
+    // Use the widest framework for columns
+    var maxDomains = 0;
+    for (var s = 0; s < appState.studies.length; s++) {
+      var fw = getFramework(appState.studies[s].framework);
+      if (fw.domains.length > maxDomains) maxDomains = fw.domains.length;
+    }
+    for (var d = 0; d < maxDomains; d++) {
+      headers.push('D' + (d + 1) + ' Label');
+      headers.push('D' + (d + 1) + ' Judgment');
+      headers.push('D' + (d + 1) + ' Rationale');
+    }
+    headers.push('Overall');
+    lines.push(headers.join(','));
+
+    for (var s = 0; s < appState.studies.length; s++) {
+      var study = appState.studies[s];
+      var fw = getFramework(study.framework);
+      var row = [csvSafe(study.id), study.framework];
+      for (var d = 0; d < maxDomains; d++) {
+        if (d < fw.domains.length) {
+          var domain = fw.domains[d];
+          var sd = study.domains[domain.id];
+          row.push(csvSafe(domain.label));
+          row.push(sd.judgment ? capitalizeJudgment(sd.judgment, study.framework) : '');
+          row.push(csvSafe(sd.rationale));
+        } else {
+          row.push('', '', '');
+        }
+      }
+      row.push(study.overall ? capitalizeJudgment(study.overall, study.framework) : '');
+      lines.push(row.join(','));
+    }
+
+    downloadFile('rob_assessment.csv', lines.join('\n'), 'text/csv');
+  }
+
+  function csvSafe(val) {
+    if (val == null) return '';
+    var s = String(val);
+    // CSV formula injection prevention: prepend ' to cells starting with = + @ \t \r
+    if (/^[=+@\t\r]/.test(s)) s = "'" + s;
+    if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function exportJSON() {
+    if (appState.studies.length === 0) { alert('No studies to export.'); return; }
+    var json = JSON.stringify(appState.studies, null, 2);
+    downloadFile('rob_assessment.json', json, 'application/json');
+  }
+
+  function downloadFile(filename, content, mimeType) {
+    var blob = new Blob([content], { type: mimeType });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportMethodsText() {
+    var n = appState.studies.length;
+    if (n === 0) { alert('No studies to generate methods text.'); return; }
+
+    var rob2Count = appState.studies.filter(function(s) { return s.framework === 'rob2'; }).length;
+    var robinsCount = appState.studies.filter(function(s) { return s.framework === 'robins-i'; }).length;
+
+    var text = 'Risk of bias was assessed using ';
+    var parts = [];
+    if (rob2Count > 0) parts.push('the revised Cochrane risk of bias tool (RoB 2) for ' + rob2Count + ' randomized trial' + (rob2Count > 1 ? 's' : '') + ' [Sterne 2019]');
+    if (robinsCount > 0) parts.push('the Risk Of Bias In Non-randomized Studies of Interventions (ROBINS-I) tool for ' + robinsCount + ' non-randomized stud' + (robinsCount > 1 ? 'ies' : 'y') + ' [Sterne 2016]');
+    text += parts.join(' and ') + '. ';
+
+    if (rob2Count > 0) {
+      text += 'RoB 2 assessment covered five domains: randomization process, deviations from intended interventions, missing outcome data, measurement of the outcome, and selection of the reported result. ';
+      text += 'Each domain was judged as "low risk of bias," "some concerns," or "high risk of bias." ';
+    }
+    if (robinsCount > 0) {
+      text += 'ROBINS-I assessment covered seven domains: confounding, selection of participants, classification of interventions, deviations from intended interventions, missing data, measurement of outcomes, and selection of the reported result. ';
+      text += 'Each domain was judged as "low," "moderate," "serious," or "critical" risk of bias, or "no information." ';
+    }
+    text += 'Overall risk of bias for each study was determined by the most severe domain-level judgment.';
+
+    // Distribution
+    var overallCounts = {};
+    for (var s = 0; s < appState.studies.length; s++) {
+      var ov = appState.studies[s].overall || 'pending';
+      overallCounts[ov] = (overallCounts[ov] || 0) + 1;
+    }
+
+    text += '\n\nOf ' + n + ' included studies, ';
+    var distParts = [];
+    var allKeys = ['low', 'some', 'moderate', 'high', 'serious', 'critical', 'ni', 'pending'];
+    for (var i = 0; i < allKeys.length; i++) {
+      var c = overallCounts[allKeys[i]];
+      if (c) distParts.push(c + ' (' + Math.round(c / n * 100) + '%) were judged as ' + capitalizeJudgment(allKeys[i], 'rob2') + ' risk of bias');
+    }
+    text += distParts.join(', ') + '.';
+
+    navigator.clipboard.writeText(text).then(function() {
+      alert('Methods text copied to clipboard.');
+    });
+  }
+
+  function importJSON() {
+    var raw = $('jsonImport').value.trim();
+    if (!raw) { alert('Paste JSON data first.'); return; }
+    try {
+      var data = JSON.parse(raw);
+      if (!Array.isArray(data)) { alert('Expected a JSON array.'); return; }
+      for (var i = 0; i < data.length; i++) {
+        var s = data[i];
+        if (!s.id || !s.framework || !s.domains) continue;
+        // Check for duplicates
+        var exists = false;
+        for (var j = 0; j < appState.studies.length; j++) {
+          if (appState.studies[j].id === s.id) { exists = true; break; }
+        }
+        if (!exists) {
+          appState.studies.push(s);
+        }
+      }
+      renderStudyList();
+      saveToStorage();
+      $('jsonImport').value = '';
+      alert('Imported ' + data.length + ' studies.');
+    } catch (e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  }
+
+  // ===== MAIF IMPORT / EXPORT =====
+
+  function exportMAIF() {
+    if (appState.studies.length === 0) { alert('No studies to export.'); return; }
+    var studies = appState.studies.map(function(s) {
+      var entry = { id: s.id, yi: null, sei: null };
+      var robData = { framework: s.framework, domains: {}, overall: s.overall };
+      var fw = getFramework(s.framework);
+      for (var i = 0; i < fw.domains.length; i++) {
+        var d = fw.domains[i];
+        var sd = s.domains[d.id];
+        robData.domains[d.id] = {
+          label: d.label,
+          judgment: sd.judgment,
+          rationale: sd.rationale
+        };
+      }
+      entry.rob = robData;
+      return entry;
+    });
+    var maif = {
+      version: '1.0',
+      metadata: {
+        effectType: 'rob',
+        createdBy: 'RoBAssessor',
+        createdAt: new Date().toISOString()
+      },
+      studies: studies
+    };
+    downloadFile('rob-assessment-maif.json', JSON.stringify(maif, null, 2), 'application/json');
+    alert('MAIF exported with ' + studies.length + ' studies.');
+  }
+
+  function importMAIFFile(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var maif = JSON.parse(e.target.result);
+        if (!maif.version || !maif.studies || !Array.isArray(maif.studies)) {
+          alert('Invalid MAIF file: missing version or studies array.');
+          return;
+        }
+        var importCount = 0;
+        for (var i = 0; i < maif.studies.length; i++) {
+          var ms = maif.studies[i];
+          if (!ms.id) continue;
+          // Check duplicates
+          var exists = false;
+          for (var j = 0; j < appState.studies.length; j++) {
+            if (appState.studies[j].id === ms.id) { exists = true; break; }
+          }
+          if (exists) continue;
+          // Determine framework
+          var frameworkId = (ms.rob && ms.rob.framework) ? ms.rob.framework : 'rob2';
+          var study = createStudy(ms.id, frameworkId);
+          // Populate domains from rob data if present
+          if (ms.rob && ms.rob.domains) {
+            var fw = getFramework(frameworkId);
+            for (var d = 0; d < fw.domains.length; d++) {
+              var domainId = fw.domains[d].id;
+              if (ms.rob.domains[domainId]) {
+                var rd = ms.rob.domains[domainId];
+                if (rd.judgment) study.domains[domainId].judgment = rd.judgment;
+                if (rd.rationale) study.domains[domainId].rationale = rd.rationale;
+              }
+            }
+            if (ms.rob.overall) study.overall = ms.rob.overall;
+            else study.overall = computeOverall(study);
+          }
+          appState.studies.push(study);
+          importCount++;
+        }
+        renderStudyList();
+        saveToStorage();
+        alert('Imported ' + importCount + ' studies from MAIF.');
+      } catch (err) {
+        alert('Failed to parse MAIF file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ===== STORAGE =====
+
+  function saveToStorage() {
+    try {
+      localStorage.setItem('robassessor-data', JSON.stringify(appState.studies));
+    } catch (e) { /* private browsing */ }
+  }
+
+  function loadFromStorage() {
+    try {
+      var raw = localStorage.getItem('robassessor-data');
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (Array.isArray(data) && data.length > 0) {
+          appState.studies = data;
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  // ===== TAB NAVIGATION =====
+
+  function showTab(name) {
+    var tabs = document.querySelectorAll('.tab-btn');
+    var panels = document.querySelectorAll('.tab-panel');
+    for (var i = 0; i < tabs.length; i++) {
+      var tabName = tabs[i].id.replace('tab-', '');
+      var isActive = tabName === name;
+      tabs[i].classList.toggle('active', isActive);
+      tabs[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tabs[i].setAttribute('tabindex', isActive ? '0' : '-1');
+    }
+    for (var i = 0; i < panels.length; i++) {
+      var panelName = panels[i].id.replace('panel-', '');
+      panels[i].classList.toggle('active', panelName === name);
+    }
+    if (name === 'summary') renderSummary();
+  }
+
+  function setupTabs() {
+    var tabs = document.querySelectorAll('.tab-btn');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function() {
+        showTab(this.id.replace('tab-', ''));
+      });
+      tabs[i].addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+        var tabList = Array.from(document.querySelectorAll('.tab-btn'));
+        var idx = tabList.indexOf(this);
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          var next = tabList[(idx + 1) % tabList.length];
+          next.click(); next.focus();
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          var prev = tabList[(idx - 1 + tabList.length) % tabList.length];
+          prev.click(); prev.focus();
+        }
+      });
+    }
+  }
+
+  // ===== THEME =====
+
+  function setupTheme() {
+    var btn = $('themeToggle');
+    try {
+      var saved = localStorage.getItem('robassessor-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        btn.textContent = 'Light Mode';
+      }
+    } catch (e) {}
+
+    btn.addEventListener('click', function() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      btn.textContent = next === 'dark' ? 'Light Mode' : 'Dark Mode';
+      try { localStorage.setItem('robassessor-theme', next); } catch (e) {}
+    });
+  }
+
+  // ===== CSV IMPORT =====
+
+  function setupCSVImport() {
+    $('importCsvBtn').addEventListener('click', function() {
+      var raw = $('csvImport').value.trim();
+      if (!raw) { alert('Paste CSV data first.'); return; }
+      var lines = raw.split('\n');
+      var added = 0;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line || line.startsWith('#')) continue;
+        var parts = line.split(',').map(function(p) { return p.trim(); });
+        if (parts.length < 1) continue;
+        var name = parts[0];
+        var fw = parts.length > 1 && parts[1].toLowerCase().indexOf('robins') >= 0 ? 'robins-i' : 'rob2';
+        addStudy(name, fw);
+        added++;
+      }
+      if (added > 0) $('csvImport').value = '';
+    });
+  }
+
+  // ===== INIT =====
+
+  function init() {
+    setupTabs();
+    setupTheme();
+    setupCSVImport();
+    loadFromStorage();
+    renderStudyList();
+
+    $('addStudyBtn').addEventListener('click', function() {
+      addStudy($('studyId').value, $('framework').value);
+      $('studyId').value = '';
+    });
+    $('addStudyBtn').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+    });
+
+    // Enter key in study ID field
+    $('studyId').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('addStudyBtn').click(); }
+    });
+
+    $('clearAllBtn').addEventListener('click', function() {
+      if (confirm('Clear all studies and assessments?')) {
+        appState.studies = [];
+        appState.activeStudyIdx = -1;
+        renderStudyList();
+        renderAssessPanel();
+        saveToStorage();
+      }
+    });
+
+    $('exportCsvBtn').addEventListener('click', exportCSV);
+    $('exportJsonBtn').addEventListener('click', exportJSON);
+    $('exportMethodsBtn').addEventListener('click', exportMethodsText);
+    $('importJsonBtn').addEventListener('click', importJSON);
+    $('printBtn').addEventListener('click', function() { window.print(); });
+    $('exportMAIFBtn').addEventListener('click', exportMAIF);
+    $('importMAIFBtn').addEventListener('click', function() {
+      $('maifFileInput').click();
+    });
+    $('maifFileInput').addEventListener('change', function() {
+      if (this.files && this.files[0]) { importMAIFFile(this.files[0]); this.value = ''; }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>

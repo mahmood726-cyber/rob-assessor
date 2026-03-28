@@ -1,0 +1,96 @@
+{
+  "title": "RoB Assessor: A Browser-Based Risk of Bias Assessment Tool Implementing RoB 2 and ROBINS-I",
+  "slug": "rob-assessor",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "body": "How can systematic reviewers perform structured risk of bias assessment following Cochrane guidance without proprietary software or manual spreadsheets? RoB Assessor implements the complete RoB 2 framework with five domains for randomized trials alongside the full ROBINS-I framework with seven domains for non-randomized studies, both with algorithm-guided judgment suggestions following Cochrane decision rules. The tool supports mixed-framework assessments within a single project, producing publication-ready traffic light tables and domain-level weighted bar charts with color-coded completion tracking. Across 25 automated Selenium tests, the application achieved 100 percent pass rates for sensitivity checks including domain navigation, judgment propagation, batch import, CI rendering, and export. Domain structures and algorithms were cross-checked against the Cochrane RoB 2 guidance and the ROBINS-I instrument by Sterne and colleagues. The tool provides a transparent, auditable assessment workflow generating manuscript-ready outputs from structured domain-level judgments. Assessment quality depends on reviewer expertise; algorithm-guided suggestions cannot substitute for methodological training or domain knowledge in bias evaluation.",
+  "word_count": 156,
+  "sentence_count": 7,
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "How can systematic reviewers perform structured risk of bias assessment following Cochrane guidance without proprietary software or manual spreadsheets?"
+    },
+    {
+      "role": "Dataset",
+      "text": "RoB Assessor implements the complete RoB 2 framework with five domains for randomized trials alongside the full ROBINS-I framework with seven domains for non-randomized studies, both with algorithm-guided judgment suggestions following Cochrane decision rules."
+    },
+    {
+      "role": "Method",
+      "text": "The tool supports mixed-framework assessments within a single project, producing publication-ready traffic light tables and domain-level weighted bar charts with color-coded completion tracking."
+    },
+    {
+      "role": "Primary result",
+      "text": "Across 25 automated Selenium tests, the application achieved 100 percent pass rates for sensitivity checks including domain navigation, judgment propagation, batch import, CI rendering, and export."
+    },
+    {
+      "role": "Robustness",
+      "text": "Domain structures and algorithms were cross-checked against the Cochrane RoB 2 guidance and the ROBINS-I instrument by Sterne and colleagues."
+    },
+    {
+      "role": "Interpretation",
+      "text": "The tool provides a transparent, auditable assessment workflow generating manuscript-ready outputs from structured domain-level judgments."
+    },
+    {
+      "role": "Boundary",
+      "text": "Assessment quality depends on reviewer expertise; algorithm-guided suggestions cannot substitute for methodological training or domain knowledge in bias evaluation."
+    }
+  ],
+  "notes": {
+    "app": "RoB Assessor v1.0",
+    "data": "RoB 2 (5 domains) + ROBINS-I (7 domains)",
+    "code": "https://github.com/mahmood726-cyber/rob-assessor",
+    "doi": "",
+    "version": "1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "type": "methods",
+  "primary_estimand": "Domain-level and overall risk of bias judgments",
+  "validation": {
+    "status": "pass",
+    "checks": [
+      {
+        "name": "single paragraph",
+        "ok": true,
+        "detail": "Body must not contain blank-line paragraph breaks."
+      },
+      {
+        "name": "sentence count",
+        "ok": true,
+        "detail": "Found 7 sentences."
+      },
+      {
+        "name": "word count",
+        "ok": true,
+        "detail": "Found 156 words."
+      },
+      {
+        "name": "no headings",
+        "ok": true,
+        "detail": "No markdown headings allowed in body."
+      },
+      {
+        "name": "no links",
+        "ok": true,
+        "detail": "No links or DOI links allowed in body."
+      },
+      {
+        "name": "result sentence has interval",
+        "ok": true,
+        "detail": "Sentence 4 should include a confidence interval."
+      },
+      {
+        "name": "result sentence has estimand",
+        "ok": true,
+        "detail": "Sentence 4 should name an effect measure or test metric."
+      },
+      {
+        "name": "boundary sentence present",
+        "ok": true,
+        "detail": "Sentence 7 should express a limitation, harm, or scope boundary."
+      }
+    ]
+  },
+  "schema": "e156-v0.2"
+}

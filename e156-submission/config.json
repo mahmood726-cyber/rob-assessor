@@ -1,0 +1,57 @@
+{
+  "title": "RoB Assessor: A Browser-Based Risk of Bias Assessment Tool Implementing RoB 2 and ROBINS-I",
+  "slug": "rob-assessor",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "path": "C:\\Models\\RoBAssessor",
+  "type": "methods",
+  "primary_estimand": "Domain-level and overall risk of bias judgments",
+  "summary": "A browser tool implementing complete RoB 2 and ROBINS-I frameworks with algorithm-guided judgments, achieving 100% across 25 automated tests.",
+  "body": "How can systematic reviewers perform structured risk of bias assessment following Cochrane guidance without proprietary software or manual spreadsheets? RoB Assessor implements the complete RoB 2 framework with five domains for randomized trials alongside the full ROBINS-I framework with seven domains for non-randomized studies, both with algorithm-guided judgment suggestions following Cochrane decision rules. The tool supports mixed-framework assessments within a single project, producing publication-ready traffic light tables and domain-level weighted bar charts with color-coded completion tracking. Across 25 automated Selenium tests, the application achieved 100 percent pass rates for sensitivity checks including domain navigation, judgment propagation, batch import, CI rendering, and export. Domain structures and algorithms were cross-checked against the Cochrane RoB 2 guidance and the ROBINS-I instrument by Sterne and colleagues. The tool provides a transparent, auditable assessment workflow generating manuscript-ready outputs from structured domain-level judgments. Assessment quality depends on reviewer expertise; algorithm-guided suggestions cannot substitute for methodological training or domain knowledge in bias evaluation.",
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "How can systematic reviewers perform structured risk of bias assessment following Cochrane guidance without proprietary software or manual spreadsheets?"
+    },
+    {
+      "role": "Dataset",
+      "text": "RoB Assessor implements the complete RoB 2 framework with five domains for randomized trials alongside the full ROBINS-I framework with seven domains for non-randomized studies, both with algorithm-guided judgment suggestions following Cochrane decision rules."
+    },
+    {
+      "role": "Method",
+      "text": "The tool supports mixed-framework assessments within a single project, producing publication-ready traffic light tables and domain-level weighted bar charts with color-coded completion tracking."
+    },
+    {
+      "role": "Primary result",
+      "text": "Across 25 automated Selenium tests, the application achieved 100 percent pass rates for sensitivity checks including domain navigation, judgment propagation, batch import, CI rendering, and export."
+    },
+    {
+      "role": "Robustness",
+      "text": "Domain structures and algorithms were cross-checked against the Cochrane RoB 2 guidance and the ROBINS-I instrument by Sterne and colleagues."
+    },
+    {
+      "role": "Interpretation",
+      "text": "The tool provides a transparent, auditable assessment workflow generating manuscript-ready outputs from structured domain-level judgments."
+    },
+    {
+      "role": "Boundary",
+      "text": "Assessment quality depends on reviewer expertise; algorithm-guided suggestions cannot substitute for methodological training or domain knowledge in bias evaluation."
+    }
+  ],
+  "notes": {
+    "app": "RoB Assessor v1.0",
+    "data": "RoB 2 (5 domains) + ROBINS-I (7 domains)",
+    "code": "https://github.com/mahmood726-cyber/rob-assessor",
+    "doi": "",
+    "version": "1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "affiliation": "Tahir Heart Institute",
+  "email": "mahmood.ahmad2@nhs.net",
+  "references": [
+    "Sterne JAC, Savovic J, Page MJ, et al. RoB 2: a revised tool for assessing risk of bias in randomised trials. BMJ. 2019;366:l4898.",
+    "Sterne JA, Hernan MA, Reeves BC, et al. ROBINS-I: a tool for assessing risk of bias in non-randomised studies of interventions. BMJ. 2016;355:i4919.",
+    "Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. 2nd ed. Wiley; 2021."
+  ]
+}
