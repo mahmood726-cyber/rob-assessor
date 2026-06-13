@@ -4,7 +4,8 @@ Selenium Test Suite: 25 tests covering RoB 2, ROBINS-I, assessment workflow, sum
 Run: python test_rob_assessor.py
 """
 import sys, os, time, io, unittest
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if "pytest" not in sys.modules:
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
